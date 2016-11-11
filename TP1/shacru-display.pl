@@ -72,7 +72,27 @@ translateCodeToChar(29,'SE').
 translateCodeToChar(X, X).
 
 	%Função usada para imprimir a linha inicial do tabuleiro
-	printTop(NumberofDashes).
+	printTop(NumberofDashes):-
+	NumberofDashes>0,
+	write('-----'),
+	write('------'),
+	nl.
+
+
+	printDashLine(1):-
+		write('-----').
+
+	printDashLine(_):-
+		write('------').
+
+	printTeste(0).
+	printTeste(N):-
+		printDashLine(N),
+		Counter is N-1,
+		printTeste(Counter).
+
+
+
 
 	printFullTile(0).
 	printFullTile(NumberofCells):-
@@ -117,5 +137,11 @@ translateCodeToChar(X, X).
 	write('-----'),
 	write(' ').
 
-	printSectorLimit(_).
-	printFullSector(_).
+	printFullSector(0).
+	printFullSector(NumberofCells):-
+		write('|'),
+		printTeste(9),
+		write('|'),
+		nl,
+		printFullTile(NumberofCells).
+
