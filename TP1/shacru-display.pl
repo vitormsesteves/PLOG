@@ -72,12 +72,6 @@ translateCodeToChar(29,'SE').
 translateCodeToChar(X, X).
 
 	%Função usada para imprimir a linha inicial do tabuleiro
-	printTop(NumberofDashes):-
-	NumberofDashes>0,
-	write('-----'),
-	write('------'),
-	nl.
-
 
 	printDashLine(1):-
 		write('-----').
@@ -85,63 +79,113 @@ translateCodeToChar(X, X).
 	printDashLine(_):-
 		write('------').
 
-	printTeste(0).
-	printTeste(N):-
+	printTop(0):-
+		write('|').
+	printTop(N):-
 		printDashLine(N),
 		Counter is N-1,
-		printTeste(Counter).
+		printTop(Counter).
 
 
 
 
 	printFullTile(0).
+
 	printFullTile(NumberofCells):-
-	printFullCell(NumberofCells),
-	write('|'),
-	printIntermediateLine(9),
-	write('|').
+		Result is NumberofCells rem 9,
+		Result == 0,
+		printFullCell(NumberofCells),
+		printTop(9).
+
+	printFullTile(NumberofCells):-
+		printFullCell(NumberofCells),
+		write('|'),
+		printIntermediateLine(9),
+		write('|').
 
 	printFullCell(0).
 	printFullCell(NumberofLines):-
-	NumberofLines > 0,	
-	printLineCell(9),
-	nl,
-	N is NumberofLines-1,
-	printFullCell(N).
+		NumberofLines > 0,
+		write('|'),
+		printLineCell(9),
+		nl,
+		N is NumberofLines-1,
+		printFullCell(N).
 
 	printLineCell(NumberofCells):-
-	write('|'),
-	printNormalLineofTiles(NumberofCells).
+		printNormalLineofTiles(NumberofCells).
 
 	printClearLine(_) :-
-	write('     '),
-	write('|').
+		write('     '),
+		write('|').
 
 	printNormalLineofTiles(0).
 	printNormalLineofTiles(NumberofCells) :-
-	NumberofCells>0,
-	printClearLine(_),
-	Ncells is NumberofCells-1,
-	printNormalLineofTiles(Ncells).
+		NumberofCells>0,
+		printClearLine(_),
+		Ncells is NumberofCells-1,
+		printNormalLineofTiles(Ncells).
+
 
 	printIntermediateLine(1):-
-	write('-----').
-	printIntermediateLine(NumberofCells):-
-	NumberofCells > 0,
-	printIntermediate(9),
-	N is NumberofCells-1,
-	printIntermediateLine(N).
+		write('-----').
 
+	printIntermediateLine(NumberofCells):-
+		NumberofCells > 0,
+		printIntermediate(9),
+		N is NumberofCells-1,
+		printIntermediateLine(N).
+
+	
+	printLine(1):-
+		write('|'),
+		printTop(9).
+
+	printLine(N):-
+		Result is N rem 7,
+		Result == 0,
+		write('|'),
+		printTop(9),
+		nl.
+
+
+	printLine(N):-
+		Result is N rem 2,
+		Result == 1,
+		write('|'),
+		printIntermediateLine(9),
+		write('|'),
+		nl.
+
+	printLine(_):-
+		printFullCell(3).
 
 	printIntermediate(_) :-
 	write('-----'),
 	write(' ').
 
 	printFullSector(0).
-	printFullSector(NumberofCells):-
-		write('|'),
-		printTeste(9),
-		write('|'),
+
+	printFullSector(NumberofLines):-
+		printLine(NumberofLines),
+		Counter is NumberofLines-1,
+		printFullSector(Counter).
+
+	printBoardAux(0).
+	printBoardAux(NumberofLines):-
+		printFullSector(6),
 		nl,
-		printFullTile(NumberofCells).
+		Counter is NumberofLines-1,
+		printBoardAux(Counter).
+
+	printBoard(_):-
+		write('|'),
+		printTop(9),
+		nl,
+		printBoardAux(3).
+
+
+
+
+
 
