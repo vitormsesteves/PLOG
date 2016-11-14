@@ -1,4 +1,6 @@
 :- include('shacru-logic.pl').
+:- include('shacru-positions.pl').
+:- include('shacru-utilities.pl').
 :- use_module(library(lists)).
 :- use_module(library(sets)).
 
@@ -167,40 +169,18 @@ displayBoard([Row|Rest], Counter):-
 	printIntermediateLine(9),
 	write('|'),nl,
 	displayBoard(Rest, NewCounter).	
-
-printBoard:-
-	write('|'),
-	printTop(9),nl,
-	T=	[[[2, 0],[0, 0],[1, 0],[1, 2],[1, 2],[0, 0],[2, 0],[2, 0],[1, 3]],
-		[[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
-		[[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
-		[[0, 0],[2, 0],[1, 0],[0, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
-		[[1, 0],[1, 0],[2, 0],[1, 9],[2, 0],[1, 0],[2, 0],[1, 0],[2, 0]],
-		[[2, 4],[2, 0],[1, 0],[2, 0],[2, 0],[1, 0],[1, 0],[2, 0],[2, 6]],
-		[[0, 0],[0, 0],[2, 0],[1, 0],[1, 0],[2, 0],[1, 0],[2, 0],[2, 6]],
-		[[0, 0],[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[1, 0],[2, 9]],
-		[[0, 0],[0, 0],[1, 0],[2, 0],[2, 0],[2, 0],[2, 0],[0, 0],[1, 0]]],
-	displayBoard(T, 1),
-	write('|'),
-	printTop(9),nl.
-printBoard(T):-
-	write('|'),
-	printTop(9),nl,
-	displayBoard(T, 1),
-	write('|'),
-	printTop(9).
 	
-	drawPiece(Owner, Dir, Counter):-
-		convertDirections(Owner, Dir, Tiles),
-		nth0(Counter, Tiles, Tile,_),
-		write(Tile),
-		NewCounter is Counter+1,
-		drawPiece(Owner,Dir, NewCounter).
+drawPiece(Owner, Dir, Counter):-
+	convertDirections(Owner, Dir, Tiles),
+	nth0(Counter, Tiles, Tile,_),
+	write(Tile),
+	NewCounter is Counter+1,
+	drawPiece(Owner,Dir, NewCounter).
 
-	printElement(Board, X, Y):-
-		getPiece(Board, X, Y, Owner, Direction),
-		%write(Owner).
-		drawPiece(Owner, Direction, 0).
+printElement(Board, X, Y):-
+	getPiece(Board, X, Y, Owner, Direction),
+	%write(Owner).
+	drawPiece(Owner, Direction, 0).
 
 showMovePiece([X, Y], Direction):-
 	T=	[[[0, 0],[0, 0],[2, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
@@ -212,5 +192,12 @@ showMovePiece([X, Y], Direction):-
 		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
 		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
 		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]]],
-movePiece(T, [X, Y], Direction, NewT),
+movePieceTest(T, [X, Y], Direction, NewT),
 printBoard(NewT).
+
+start:-
+        panelName, 
+        menu, 
+        read(Choice),
+        nl,
+        readChoice(Choice).
