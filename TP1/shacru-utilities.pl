@@ -45,6 +45,30 @@ gameCycle(Board, _, Winner, FinalWinner):-
       Winner \= 0,
       printBoard(Board).
 
+createPlayerList(NumPlayers, PlayerList):- 
+      NumPlayers > 1, NumPlayers < 5, 
+      createPlayerList(NumPlayers, 1, [], PlayerList).
+createPlayerList(NumPlayers, Iterator, TempList, PlayerList):-
+      NumPlayers =:= Iterator,
+      append(TempList, [[Iterator, 1]], PlayerList).
+createPlayerList(NumPlayers, Iterator, TempList, PlayerList):-
+      NumPlayers \= Iterator,
+      IteratorPlus is Iterator + 1,
+      append(TempList, [[Iterator, 1]], TempListPlus),
+      createPlayerList(NumPlayers, IteratorPlus, TempListPlus, PlayerList).
+
+updatePlayerList(Board, Player, [ActualPlayerElem | Rest], NewPlayerList):-
+      getPlayerMovingPieces(Board, Player, _Pieces, PiecesLength),
+      updatePlayerListAux(PiecesLength, [ActualPlayerElem | Rest], NewPlayerList). %Passes to the next player, and updates if he can move any piece
+      
+updatePlayerListAux(PiecesLength, [[PlayerNumber, _IsAbleToPlay] | Rest], NewPlayerList):-
+      PiecesLength > 0,
+      append(Rest, [[PlayerNumber, 1]], NewPlayerList).
+updatePlayerListAux(PiecesLength, [[PlayerNumber, _IsAbleToPlay] | Rest], NewPlayerList):-
+      PiecesLength =:= 0,
+      write('Cant move more'), nl, 
+      append(Rest, [[PlayerNumber, 0]], NewPlayerList).
+
 game :-
       createBoard(NumPlayers, Board),
       createPlayerList(NumPlayers, PlayerList),
@@ -68,8 +92,6 @@ moveAPieceAux(Board, [_X, _Y], 0, NewBoard):- %In case of pass
 moveAPieceAux(Board, [X, Y], Direction, NewBoard):- %No marker -> Increases score
       \+nextTileHasMarker(Board, [X,Y], Direction),
       write('movePieceAux: No Marker'), nl,
-      getPlayer(Board, [X, Y], Player),
-      write('movePieceAux: got Player'), nl,
       movePiece(Board, [X, Y], Direction, NewBoardTemp),
       write('movePieceAux: movedPiece'), nl,
       NewBoard = NewBoardTemp.
@@ -179,3 +201,13 @@ showDynamic:-
       write('|'),
       printTop(9),nl.
       
+createBoard(2, Board):-
+      Board = [[[2, 9],[0, 0],[1, 8],[0, 0],[0, 0],[0, 0],[2, 8],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[1, 6],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[2, 4]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+                  [[0, 0],[0, 0],[1, 2],[0, 0],[0, 0],[0, 0],[2, 2],[0, 0],[1, 1]]].
