@@ -14,13 +14,13 @@ readChoice(Number):-
       nl,
       start.
 readChoice(1):- 
-      printBoard.
+      game.
 readChoice(2):- 
       write(' Play again later, Cya!').
 
 askForRotation(Orientation):-
-      write('In which direction do you want to rotate the piece?'),nl,
-      write('1 - Counterclockwise; 2 - No Rotation; 3 - Clockwise'), nl,
+      write('Do you which to rotate your Piece?'),nl,
+      write('1 - Anticlockwise; 2 - Dont Rotate ; 3 - Clockwise'), nl,
       read(OrientationTemp), nl,
       OrientationTemp > 0, OrientationTemp < 4,
       Orientation = OrientationTemp.
@@ -92,13 +92,13 @@ moveAPieceAux(Board, [_X, _Y], 0, NewBoard):- %In case of pass
 moveAPieceAux(Board, [X, Y], Direction, NewBoard):- %No marker -> Increases score
       \+nextTileHasMarker(Board, [X,Y], Direction),
       write('movePieceAux: No Marker'), nl,
-      movePiece(Board, [X, Y], Direction, NewBoardTemp),
+      movePiece(Board, [X, Y], Direction, NewBoardTemp), %Checks if no marker
       write('movePieceAux: movedPiece'), nl,
       NewBoard = NewBoardTemp.
-moveAPieceAux(Board, [X, Y], Direction, NewBoard):- %Already placed marker -> No increase in score
-      nextTileHasMarker(Board, [X,Y], Direction),
+moveAPieceAux(Board, [X, Y], Direction, NewBoard):-
+      nextTileHasMarker(Board, [X,Y], Direction), %ChecksForMarker
       write('movePieceAux: Has Marker'), nl,
-      movePiece(Board, [X, Y], Direction, NewBoardTemp),
+      movePiece(Board, [X, Y], Direction, NewBoardTemp), 
       write('movePieceAux: movedPiece'), nl,
       NewBoard = NewBoardTemp.
 
@@ -108,16 +108,16 @@ displayDirectionsToMove(Board, [X, Y]):-
       displayDirectionsToMoveAux(Directions).
       
 displayDirectionsToMoveAux([]):-
-      displayDirectionName(0), write(' - '), write(0).
+      printDirection(0), write(' - '), write(0).
 displayDirectionsToMoveAux([Direction | Rest]):-
-      displayDirectionName(Direction), write(' - '), write(Direction),nl,
+      printDirection(Direction), write(' - '), write(Direction),nl,
       displayDirectionsToMoveAux(Rest).
       
 rotateAPiece(Board, _, 0, _, NewBoard):-
       NewBoard = Board.
 rotateAPiece(Board, Piece, 1, Direction, NewBoard):-
       printBoard(Board),
-      directionToCoordinates(Direction, Piece, NewPiece), %to get the new piece after moveAPiece
+      switchTileCoordinate(Direction, Piece, NewPiece), %to get the new piece after moveAPiece
       askForRotation(Orientation),
       rotatePiece(Board, NewPiece, Orientation, NewBoard).
 
@@ -127,7 +127,6 @@ choosePiece(Board, Player, Piece):-
       displayPiecesToChoose(Pieces),
       read(PieceChosen),
       PieceChosen > -1, PieceChosen < PiecesLength + 1,
-      %member(PieceChosen, Pieces), TODO
       choosePieceAux(Pieces, PieceChosen, Piece).
 
 choosePieceAux(_, 0, Piece):-
@@ -139,14 +138,15 @@ choosePieceAux([_Piece | Rest], DecreasingIndex, PieceChosen):-
             DecreasingIndexMinus is DecreasingIndex - 1,
             choosePieceAux(Rest, DecreasingIndexMinus, PieceChosen).
 
-displayPiecesToChoose(Pieces):- displayPiecesToChoose(Pieces, 1).
+displayPiecesToChoose(Pieces):- 
+      displayPiecesToChoose(Pieces, 1).
 displayPiecesToChoose([], 1):-
       write('0 - Pass'), nl .
 displayPiecesToChoose([], _Iterator).
-displayPiecesToChoose([Piece | Rest], Iterator):-
-      write(Iterator), write(' - '), write(Piece), nl,
-      IteratorPlus is Iterator + 1,
-      displayPiecesToChoose(Rest, IteratorPlus).
+displayPiecesToChoose([Piece | Rest], Counter):-
+      write(Counter), write(' - '), write(Piece), nl,
+      NewCounter is Counter + 1,
+      displayPiecesToChoose(Rest, NewCounter).
 
 printBoard:-
       write('|'),
