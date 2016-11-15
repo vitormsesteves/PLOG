@@ -68,9 +68,9 @@ printDirection(9):-write('SE').
 	convertDirections(1,[1, 2]):- 
 		write(':|:').
 	convertDirections(1,[1, 3]):-
-		write('::a').
+		write('::`').
 	convertDirections(1,[2, 1]):-
-		write('a**').
+		write('`**').
 	convertDirections(1,[2, 2]):-
 		write('*|*').
 	convertDirections(1,[2, 3]):-
@@ -98,13 +98,13 @@ printDirection(9):-write('SE').
 	convertDirections(3,[1, 8]):-
 		write(':|:').
 	convertDirections(3,[1, 9]):-
-		write('::a').
+		write('::`').
 	convertDirections(3,[2, 7]):-
 		write('/**').
 	convertDirections(3,[2, 8]):-
 		write('*|*').
 	convertDirections(3,[2, 9]):-
-		write('**a').
+		write('**`').
 	convertDirections(3, [_, _]):-
 		write('   ').
 
@@ -182,22 +182,10 @@ printElement(Board, X, Y):-
 	%write(Owner).
 	drawPiece(Owner, Direction, 0).
 
-showMovePiece([X, Y], Direction):-
-	T=	[[[0, 0],[0, 0],[2, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[1, 9],[2, 1],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
-		[[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]]],
-movePieceTest(T, [X, Y], Direction, NewT),
-printBoard(NewT).
-
 start:-
         panelName, 
         menu, 
         read(Choice),
         nl,
         readChoice(Choice).
+

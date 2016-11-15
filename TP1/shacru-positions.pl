@@ -1,5 +1,14 @@
 %%Poisitions and Directions%%%
 
+%%%%%%%%%%%%%%% Block Used to get Players %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+getPlayer(Board, [X, Y], Player):-
+	getTile(Board, [TilePlayer, _TileDirection], [X, Y]),
+	Player = TilePlayer.
+
+setPlayer(Board, [X, Y], Player, NewBoard):-
+	getTile(Board, [_TilePlayer, TileDirection], [X, Y]),
+	changeTile(Board, [X, Y], [Player, TileDirection], NewBoard).
+
 %%%%%%%%%%%%%%%%%%%% Block Used to get Lines %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 getLine(Board, Line, LineNumber):- 
 	getLine(Board, Line, LineNumber, 1).
@@ -31,8 +40,7 @@ getColumn([_Element|Rest], Tile, ColumnNumber, Counter):-
 %%%%%%%%%%%%%%%%%% Block used to get the Tiles %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 getTile(Board, Tile, [X, Y]):-
 	getLine(Board, Line, Y), !, 
-	getColumn(Line, Tile, X),
-	write(Tile), nl.
+	getColumn(Line, Tile, X).
 
 
 %%%%%%%%%%%%%%%%%% Block used to get the Direction of a piece (2nd element of the list), so we can change it%%%%%%%%%%%%%%%%%%%%%%%%	

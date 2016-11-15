@@ -18,6 +18,114 @@ readChoice(1):-
 readChoice(2):- 
       write(' Play again later, Cya!').
 
+askForRotation(Orientation):-
+      write('In which direction do you want to rotate the piece?'),nl,
+      write('1 - Counterclockwise; 2 - No Rotation; 3 - Clockwise'), nl,
+      read(OrientationTemp), nl,
+      OrientationTemp > 0, OrientationTemp < 4,
+      Orientation = OrientationTemp.
+
+turn(Board, Player, NewBoard):-
+      printBoard(Board),
+      write('Player '), write(Player), write(' turn: '), nl,
+      choosePiece(Board, Player, PieceChosen),
+      moveAPiece(Board, PieceChosen, NewBoard1, Direction, HasChangedArea),
+      write('Sector Change' ), write(HasChangedArea), nl,
+      rotateAPiece(NewBoard1, PieceChosen, HasChangedArea, Direction, NewBoard),
+      write('turn: Rotated piece'), nl .
+
+gameCycle(Board, [[ActualPlayer, IsAbleToPlay] | RemainingPlayerList], Winner, FinalWinner):-
+      Winner =:= 0,
+      turn(Board, ActualPlayer, NewBoard),
+      updatePlayerList(NewBoard, ActualPlayer, [[ActualPlayer, IsAbleToPlay] | RemainingPlayerList], NewPlayerList),
+      write('gameCycle: updated player list'), nl,
+      checkEndGameAux(NewPlayerList, NewWinner),
+      gameCycle(NewBoard, NewPlayerList, NewWinner, FinalWinner).
+gameCycle(Board, _, Winner, FinalWinner):-
+      Winner \= 0,
+      printBoard(Board).
+
+game :-
+      createBoard(NumPlayers, Board),
+      createPlayerList(NumPlayers, PlayerList),
+      gameCycle(Board, PlayerList, 0, FinalWinner),
+      nl, nl.
+
+moveAPiece(Board, [], NewBoard, _, HasChangedArea):- %In case the player chooses to pass the turn
+      NewBoard = Board,
+      HasChangedArea = 0.
+
+moveAPiece(Board, [X, Y], NewBoard, Direction, HasChangedArea):- %No marker -> Increases score
+      getTile(Board, [_, TileDirection], [X, Y]),
+      TileDirection \= 0, %It must have a piece in the tile
+      displayDirectionsToMove(Board, [X, Y]),
+      read(Direction),
+      checkSectorChange([X, Y], Direction, HasChangedArea),
+      moveAPieceAux(Board, [X, Y], Direction, NewBoard).
+      
+moveAPieceAux(Board, [_X, _Y], 0, NewBoard):- %In case of pass
+      NewBoard = Board.
+moveAPieceAux(Board, [X, Y], Direction, NewBoard):- %No marker -> Increases score
+      \+nextTileHasMarker(Board, [X,Y], Direction),
+      write('movePieceAux: No Marker'), nl,
+      getPlayer(Board, [X, Y], Player),
+      write('movePieceAux: got Player'), nl,
+      movePiece(Board, [X, Y], Direction, NewBoardTemp),
+      write('movePieceAux: movedPiece'), nl,
+      NewBoard = NewBoardTemp.
+moveAPieceAux(Board, [X, Y], Direction, NewBoard):- %Already placed marker -> No increase in score
+      nextTileHasMarker(Board, [X,Y], Direction),
+      write('movePieceAux: Has Marker'), nl,
+      movePiece(Board, [X, Y], Direction, NewBoardTemp),
+      write('movePieceAux: movedPiece'), nl,
+      NewBoard = NewBoardTemp.
+
+displayDirectionsToMove(Board, [X, Y]):-
+      getMovingDirections(Board, [X, Y], Directions),
+      write('Whats the next direction? '), nl,
+      displayDirectionsToMoveAux(Directions).
+      
+displayDirectionsToMoveAux([]):-
+      displayDirectionName(0), write(' - '), write(0).
+displayDirectionsToMoveAux([Direction | Rest]):-
+      displayDirectionName(Direction), write(' - '), write(Direction),nl,
+      displayDirectionsToMoveAux(Rest).
+      
+rotateAPiece(Board, _, 0, _, NewBoard):-
+      NewBoard = Board.
+rotateAPiece(Board, Piece, 1, Direction, NewBoard):-
+      printBoard(Board),
+      directionToCoordinates(Direction, Piece, NewPiece), %to get the new piece after moveAPiece
+      askForRotation(Orientation),
+      rotatePiece(Board, NewPiece, Orientation, NewBoard).
+
+choosePiece(Board, Player, Piece):-
+      getPlayerMovingPieces(Board, Player, Pieces, PiecesLength),
+      write('Which piece do you want to move? '), nl,
+      displayPiecesToChoose(Pieces),
+      read(PieceChosen),
+      PieceChosen > -1, PieceChosen < PiecesLength + 1,
+      %member(PieceChosen, Pieces), TODO
+      choosePieceAux(Pieces, PieceChosen, Piece).
+
+choosePieceAux(_, 0, Piece):-
+      Piece = [].
+choosePieceAux([Piece | _Rest], 1, PieceChosen):-
+      PieceChosen = Piece.
+choosePieceAux([_Piece | Rest], DecreasingIndex, PieceChosen):-
+            DecreasingIndex \= 1,
+            DecreasingIndexMinus is DecreasingIndex - 1,
+            choosePieceAux(Rest, DecreasingIndexMinus, PieceChosen).
+
+displayPiecesToChoose(Pieces):- displayPiecesToChoose(Pieces, 1).
+displayPiecesToChoose([], 1):-
+      write('0 - Pass'), nl .
+displayPiecesToChoose([], _Iterator).
+displayPiecesToChoose([Piece | Rest], Iterator):-
+      write(Iterator), write(' - '), write(Piece), nl,
+      IteratorPlus is Iterator + 1,
+      displayPiecesToChoose(Rest, IteratorPlus).
+
 printBoard:-
       write('|'),
       printTop(9),nl,
@@ -39,3 +147,35 @@ printBoard(T):-
       displayBoard(T, 1),
       write('|'),
       printTop(9).
+
+showMovePiece([X, Y], Direction):-
+      T=    [[[0, 0],[0, 0],[2, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[1, 9],[2, 1],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]],
+            [[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0],[0, 0]]],
+movePieceTest(T, [X, Y], Direction, NewT),
+printBoard(NewT).
+
+showDynamic:-
+      write('|'),
+      printTop(9),nl,
+      T=    [[[2, 0],[0, 0],[1, 0],[1, 2],[1, 2],[0, 0],[2, 0],[2, 0],[1, 3]],
+            [[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
+            [[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
+            [[0, 0],[2, 0],[1, 0],[0, 0],[1, 0],[2, 0],[2, 0],[1, 0],[2, 0]],
+            [[1, 0],[1, 0],[2, 0],[1, 9],[2, 0],[1, 0],[2, 0],[1, 0],[2, 0]],
+            [[2, 4],[2, 0],[1, 0],[2, 0],[2, 0],[1, 0],[1, 0],[2, 0],[2, 6]],
+            [[0, 0],[0, 0],[2, 0],[1, 0],[1, 0],[2, 0],[1, 0],[2, 0],[2, 6]],
+            [[0, 0],[0, 0],[2, 0],[1, 0],[1, 0],[1, 0],[2, 0],[1, 0],[2, 9]],
+            [[0, 0],[0, 0],[1, 0],[2, 0],[2, 0],[2, 0],[2, 0],[0, 0],[1, 0]],
+            [[0, 0],[0, 0],[1, 0],[2, 0],[2, 0],[2, 0],[2, 0],[0, 0],[1, 0]],
+            [[0, 0],[0, 0],[1, 0],[2, 0],[2, 0],[2, 0],[2, 0],[0, 0],[1, 0]]],
+      displayBoard(T, 1),
+      write('|'),
+      printTop(9),nl.
+      

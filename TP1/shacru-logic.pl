@@ -54,3 +54,113 @@ movePieceTest(Board, [X, Y], Direction, NewBoard):-
 	switchTileCoordinate(Direction, [X, Y], [NewX, NewY]), %Get the new Tile
 	changeTile(Board, [NewX, NewY], [TilePlayer, Direction], TempBoard), %Place the marker and the piece in the new Tile
 	setDirection(TempBoard, [X, Y], 0, NewBoard).
+
+%%%%%%%%%%%%%%%% Piece Rotation and Area Checking %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+checkSectorChange([X, Y], [NewX, NewY]):-
+	(X =:= 3, NewX =:= 4);
+	(X =:= 4, NewX =:= 3);
+	(X =:= 6, NewX =:= 7);
+	(X =:= 7, NewX =:= 6);
+	(Y =:= 3, NewY =:= 4);
+	(Y =:= 4, NewY =:= 3);
+	(Y =:= 6, NewY =:= 7);
+	(Y =:= 7, NewY =:= 6).
+	
+%Returns a "boolean" to check if a piece has changed or not.
+checkSectorChange([X, Y], Direction, HasChanged):-
+	switchTileCoordinate(Direction, [X, Y], [ResX, ResY]),
+	checkSectorChange([X, Y], [ResX, ResY]),
+	HasChanged = 1.
+checkSectorChange([X, Y], Direction, HasChanged):-
+	switchTileCoordinate(Direction, [X, Y], [ResX, ResY]),
+	\+checkSectorChange([X, Y], [ResX, ResY]),
+	HasChanged = 0.
+
+rotatePiece(Board, [X, Y], 1, NewBoard):- % CounterClockWise
+	getTile(Board, [TilePlayer, TileDirection], [X, Y]),!, %get Tile
+	write('Got tile'), nl,
+	TilePlayer \= 0, !,						%if it is 0, then there is no piece
+	TileDirection \= 0, TileDirection \= 5, !,%if it is 0 or 5, there is no piece
+	possiblePositions(TileDirection, [CounterClockWise, _Same, _ClockWise]),
+	setDirection(Board, [X, Y], CounterClockWise, NewBoard),
+	write('Rotate Piece done'), nl.
+	
+rotatePiece(Board, [X, Y], 2, NewBoard):- % Same direction basicly doesnt do anything. (Stays the same)
+	getTile(Board, [TilePlayer, TileDirection], [X, Y]),!, %get old Tile
+	TilePlayer \= 0, !,						%if it is 0, then there is no piece
+	TileDirection \= 0, TileDirection \= 5, !,%if it is 0 or 5, there is no piece
+	possiblePositions(TileDirection, [_CounterClockWise, Same, _ClockWise]),
+	setDirection(Board, [X, Y], Same, NewBoard).
+	
+rotatePiece(Board, [X, Y], 3, NewBoard):- % ClockWise
+	getTile(Board, [TilePlayer, TileDirection], [X, Y]),!, %get old Tile
+	TilePlayer \= 0, !,						%if it is 0, then there is no piece
+	TileDirection \= 0, TileDirection \= 5, !,%if it is 0 or 5, there is no piece
+	possiblePositions(TileDirection, [_CounterClockWise, _Same, ClockWise]),
+	setDirection(Board, [X, Y], ClockWise, NewBoard).
+	
+rotatePiece(_, _, _, _):- fail .
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%% Checks if the next Tile has a marker, to be able to move in, in case its from the same player %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+nextTileHasMarker(Board, [X,Y], Direction):-
+	switchTileCoordinate(Direction, [X, Y], [NewX, NewY]),!,
+	getTile(Board, [TilePlayer, _TileDirection], [NewX, NewY]),!,
+	TilePlayer \= 0.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Used to get the player pieces%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	 
+
+getPlayerPieces(Board, Player, Pieces, PiecesLength):-
+	Player > 0, Player < 5,
+	getPlayerPieces(Board, Player, 1, [], Pieces, 0, PiecesLength).
+getPlayerPieces([], _, _, TempPieces, Pieces, TempPiecesLength, PiecesLength):-
+	Pieces = TempPieces,
+	PiecesLength = TempPiecesLength.
+getPlayerPieces([Line | Rest], Player, ActualY, TempPieces, Pieces, TempPiecesLength, PiecesLength):-
+	getPlayerPiecesLine(Line, Player, [1, ActualY], [], Pieces1, 0, PiecesLength1),
+	ActualYPlus is ActualY + 1,
+	TempPiecesLengthPlus is PiecesLength1 + TempPiecesLength,
+	append(TempPieces, Pieces1, TempPiecesPlus),
+	getPlayerPieces(Rest, Player, ActualYPlus, TempPiecesPlus, Pieces, TempPiecesLengthPlus, PiecesLength).
+
+getPlayerPiecesLine([], _, _, TempPieces, Pieces, TempPiecesLength, PiecesLength):-
+	Pieces = TempPieces,
+	PiecesLength = TempPiecesLength.
+getPlayerPiecesLine([[TilePlayer, _TileDirection] | Rest], Player, [ActualX, ActualY], TempPieces, Pieces, TempPiecesLength, PiecesLength):-
+	TilePlayer \= Player,
+	ActualXPlus is ActualX + 1,
+	getPlayerPiecesLine(Rest, Player, [ActualXPlus, ActualY], TempPieces, Pieces, TempPiecesLength, PiecesLength).
+getPlayerPiecesLine([[TilePlayer, _TileDirection] | Rest], Player, [ActualX, ActualY], TempPieces, Pieces, TempPiecesLength, PiecesLength):-
+	TilePlayer =:= Player,
+	append(TempPieces, [[ActualX, ActualY]], TempPiecesPlus),
+	ActualXPlus is ActualX + 1,
+	PiecesLengthPlus is TempPiecesLength + 1,
+	getPlayerPiecesLine(Rest, Player, [ActualXPlus, ActualY], TempPiecesPlus, Pieces, PiecesLengthPlus, PiecesLength).
+
+%%%%%%%%%%%%%%%%%% Check if a piece can move by checking if the getMovingDirections predicate returns %%%%%%%%%%%%%%%%%%%%%%%%%%%%%55
+pieceCanMove(Board, [X, Y]):-
+	getMovingDirections(Board, [X, Y], Directions),
+	!,
+	Directions \= []. %If it is empty, the piece cant move to any valid tile
+
+
+%%%%%%%%%%%%%% Predicates used to get the pieces the player can posibly move %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+getPlayerMovingPieces(Board, Player, Pieces, PiecesLength):- %Only return the pieces of the player that can move
+	getPlayerPieces(Board, Player, AllPieces, _AllPiecesLength),
+	getPlayerMovingPiecesAux(Board, AllPieces, Pieces, PiecesLength).
+	
+getPlayerMovingPiecesAux(Board, AllPieces, MovingPieces, MovingPiecesLength):-
+	getPlayerMovingPiecesAux(Board, AllPieces, [], MovingPieces, 0, MovingPiecesLength).
+	
+getPlayerMovingPiecesAux(_Board, [], TempMovingPieces, MovingPieces, TempMovingPiecesLength, MovingPiecesLength):-
+	MovingPieces = TempMovingPieces,
+	MovingPiecesLength = TempMovingPiecesLength.
+getPlayerMovingPiecesAux(Board, [Piece | Rest], TempMovingPieces, MovingPieces, TempMovingPiecesLength, MovingPiecesLength):-
+	pieceCanMove(Board, Piece),
+	append(TempMovingPieces, [Piece], TempMovingPiecesPlus),
+	TempMovingPiecesLengthPlus is TempMovingPiecesLength + 1,
+	getPlayerMovingPiecesAux(Board, Rest, TempMovingPiecesPlus, MovingPieces, TempMovingPiecesLengthPlus, MovingPiecesLength).
+	
+getPlayerMovingPiecesAux(Board, [Piece | Rest], TempMovingPieces, MovingPieces, TempMovingPiecesLength, MovingPiecesLength):-
+	\+pieceCanMove(Board, Piece),
+	getPlayerMovingPiecesAux(Board, Rest, TempMovingPieces, MovingPieces, TempMovingPiecesLength, MovingPiecesLength).
